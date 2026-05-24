@@ -10,7 +10,7 @@
     };
   };
 
-  outputs = inputs: let
+  outputs = {self, ...} @ inputs: let
     supportedSystems = ["x86_64-linux" "aarch64-linux" "x86_64-darwin" "aarch64-darwin"];
     forEachSupportedSystem = f:
       inputs.nixpkgs.lib.genAttrs supportedSystems (system:
@@ -34,32 +34,39 @@
         ]);
     };
 
-    devShells = forEachSupportedSystem ({pkgs}: {
-      default = pkgs.mkShell {
-        packages = with pkgs; [
-          # Rust packages
-          rustToolchain
-          pkg-config
-          rust-analyzer
+    formatter = forEachSupportedSystem ({pkgs, ...}: pkgs.alejandra);
 
-          # Required for reqwest crate
-          openssl
+    devShells = forEachSupportedSystem (
+      {pkgs}: {
+        default = pkgs.mkShell {
+          packages = with pkgs; [
+            # RUST
+            rustToolchain
+            pkg-config
+            rust-analyzer
+            openssl # Required for reqwest crate
 
-          postgresql
-        ];
+            # NIX
+            nixd
+            alejandra
 
-        env = {
-          # Required by rust-analyzer
-          RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
+            # POSTGRES
+            postgresql
+          ];
 
-          OPENSSL_DIR = "${pkgs.openssl.dev}";
-          OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
-          OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";
+          env = {
+            # Required by rust-analyzer
+            RUST_SRC_PATH = "${pkgs.rustToolchain}/lib/rustlib/src/rust/library";
 
-          PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+            OPENSSL_DIR = "${pkgs.openssl.dev}";
+            OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
+            OPENSSL_INCLUDE_DIR = "${pkgs.openssl.dev}/include";
+
+            PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
+          };
         };
-      };
-      nativeBuildInputs = with pkgs; [pkg-config];
-    });
+        nativeBuildInputs = with pkgs; [pkg-config];
+      }
+    );
   };
 }
