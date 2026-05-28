@@ -66,3 +66,29 @@ To use the website, go to <http://localhost:80> in your web browser of choice.
 > Please note that there will not be many search results at first. But as the
 crawler and indexer continue to gather more and more results, both the accuracy
 and number of search results will increase.
+
+### Connecting to Postgres
+
+To connect to the database, run the following command:
+
+```sh
+PGPASSWORD=<DB_PASSWORD> psql -h localhost -p <DB_PORT> -U <DB_USER> -d <DB_NAME>
+```
+
+If you're using the `.env. file example provided above, this becomes:
+
+```sh
+PGPASSWORD=123 psql -h localhost -p 5432 -U postgres -d postgres
+```
+
+To get the number of crawled pages:
+
+```sql
+SELECT COUNT(*) FROM pages;
+```
+
+To get the number of indexed pages:
+
+```sql
+SELECT COUNT(*) FROM pages WHERE is_indexed = true;
+```
